@@ -18,3 +18,6 @@ def read_file(path: str):
         raise HTTPException(status_code=404, detail="File not found")
     with open(file_path, "r") as f:
         return f.read()
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
