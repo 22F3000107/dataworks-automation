@@ -1,9 +1,8 @@
-from fastapi import FastAPI, HTTPException, Query, BackgroundTasks
-import os
-import requests
+from fastapi import FastAPI, HTTPException, Query
 import json
 from pathlib import Path
 from typing import List, Dict
+import logging
 from app.task_executor import execute_step
 from app.llm_handler import call_llm
 from app.utils import is_safe_path, validate_step
@@ -19,6 +18,8 @@ ALLOWED_ACTIONS = {
     'compress_image', 'transcribe_audio', 'markdown_to_html', 'filter_csv'
 }
 
+logging.basicConfig(level=logging.INFO)
+
 def parse_task(task: str) -> List[Dict]:
     """Use LLM to parse task into structured steps."""
     prompt = f"""
@@ -33,33 +34,40 @@ def parse_task(task: str) -> List[Dict]:
         if not isinstance(steps, list):
             steps = [steps]
         return steps
-    except:
+    except Exception as e:
+        logging.error(f"LLM parsing failed: {str(e)}")
         raise HTTPException(status_code=500, detail="LLM parsing failed")
 
+@app.get("/")
+def read_root():
+    return {"message": "DataWorks Automation API is running"}
+
 @app.post("/run")
-async def run_task(task: str = Query(..., alias="task"), background_tasks: BackgroundTasks = None):
-    """API Endpoint to parse and execute automation tasks."""
+async def run_task(task: str = Query(..., alias="task")):
+    """API Endpoint to parse and execute automation tasks using Celery."""
     try:
         steps = parse_task(task)
     except HTTPException as e:
-        return {"status": "error", "detail": e.detail}, e.status_code
+        return {"status": "error", "detail": e.detail}
     
     for step in steps:
         if not validate_step(step):
-            return {"status": "error", "detail": "Invalid step"}, 400
-        background_tasks.add_task(process_task, step)
+            return {"status": "error", "detail": "Invalid step"}
+        process_task.delay(step)  # Celery async task execution
 
-    return {"status": "success", "message": "Task execution started in the background"}
+    return {"status": "success", "message": "Task execution started in Celery"}
 
 @app.get("/read")
 async def read_file(path: str = Query(...)):
     """API Endpoint to read file contents safely."""
     if not is_safe_path(path):
-        return HTTPException(status_code=403, detail="Forbidden")
+        raise HTTPException(status_code=403, detail="Forbidden")
+    
     file_path = Path(path)
     if not file_path.exists():
-        return HTTPException(status_code=404)
-    return file_path.read_text()
+        raise HTTPException(status_code=404, detail="File not found")
+
+    return {"status": "success", "content": file_path.read_text()}
 
 if __name__ == "__main__":
     import uvicorn
