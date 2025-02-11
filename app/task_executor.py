@@ -7,7 +7,7 @@ from pathlib import Path
 from datetime import datetime
 from app.llm_handler import call_llm
 
-DATA_DIR = "/data"
+DATA_DIR = "data"
 
 def execute_step(step: dict):
     """Executes an automation step based on action type."""
