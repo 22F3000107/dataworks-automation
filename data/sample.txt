@@ -1,1 +1,96 @@
-test@example.com
+==================================
+📧 EMAIL EXTRACTION TEST DATA
+==================================
+Hello Team,
+
+Please contact us at support@example.com for any queries.
+You can also reach out to:
+- john.doe@company.org
+- sales@business.net
+- hr@startup.io
+
+==================================
+💳 CREDIT CARD & PAYMENT DETAILS
+==================================
+Customer Order Details:
+- Name: Alice Johnson
+- Card Number: 4111-XXXX-XXXX-1234
+- Expiry: 12/26
+- Payment Status: Paid
+
+Transaction History:
+1. Order ID: #12345 | Amount: $250.00 | Status: ✅ Completed
+2. Order ID: #12346 | Amount: $120.75 | Status: ❌ Failed
+3. Order ID: #12347 | Amount: $89.99 | Status: ✅ Completed
+
+==================================
+📄 JSON PROCESSING TEST
+==================================
+{
+    "users": [
+        {"name": "Alice", "email": "alice@email.com", "age": 30},
+        {"name": "Bob", "email": "bob@email.com", "age": 25},
+        {"name": "Charlie", "email": "charlie@email.com", "age": 35}
+    ],
+    "settings": {
+        "theme": "dark",
+        "notifications": true
+    }
+}
+
+==================================
+📊 CSV FILTERING TEST
+==================================
+ID, Name, Age, City, Order Total
+101, Alice Johnson, 30, New York, 250.00
+102, Bob Smith, 25, San Francisco, 120.75
+103, Charlie Brown, 35, Chicago, 89.99
+
+==================================
+📝 TEXT FORMATTING TEST
+==================================
+   This   is an example    of badly formatted  text.   
+   It    needs proper   spacing and cleanup.   
+
+==================================
+# 📝 MARKDOWN TO HTML TEST
+==================================
+# Sample Heading
+## Subheading
+- Bullet Point 1
+- Bullet Point 2
+- **Bold Text**
+- *Italic Text*
+
+[Visit our website](https://example.com)
+
+==================================
+📅 DATE & TIME PROCESSING TEST
+==================================
+Today's Date: 2025-02-10
+Event: Conference on AI
+Date: 2025-03-15
+Time: 10:30 AM - 3:00 PM
+
+==================================
+🔍 SENTIMENT ANALYSIS TEST
+==================================
+1. "I love using FastAPI! It's super fast and easy to use. 🚀"
+2. "The website is always slow and frustrating. 😡"
+3. "The customer support was helpful and resolved my issue quickly. 👍"
+4. "This service is just okay. Nothing special. 😐"
+
+==================================
+🌐 URL & API ENDPOINT EXTRACTION TEST
+==================================
+Visit our API documentation at:
+- https://api.example.com/docs
+- https://api.example.com/v1/users
+- https://api.example.com/v1/orders
+
+==================================
+📂 FILE PATH EXTRACTION TEST
+==================================
+C:\Users\Admin\Documents\report.pdf
+/home/user/downloads/sample.csv
+/var/www/html/index.html

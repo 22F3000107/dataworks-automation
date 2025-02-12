@@ -28,8 +28,7 @@ if not REDIS_URL:
     raise ValueError("Missing REDIS_URL in .env file")
 
 
-print("AIPROXY_TOKEN:", os.getenv("AIPROXY_TOKEN"))
-print("REDIS_URL:", os.getenv("REDIS_URL"))
+logging.info("Environment variables loaded successfully")
 
 
 DATA_DIR = "data"
@@ -45,14 +44,18 @@ logging.basicConfig(level=logging.INFO)
 class TaskRequest(BaseModel):
     task: str
 
+# main.py
 def parse_task(task: str) -> List[Dict]:
-    """Use LLM to parse task into structured steps."""
-    prompt = f"""
-    Parse the task into JSON steps. Use actions: {ALLOWED_ACTIONS}. Paths must be in {DATA_DIR}.
-    No deletions. Example:
-    {{"action":"extract_email", "input_path":"{DATA_DIR}/sample.txt", "output_path":"{DATA_DIR}/emails.txt"}}
-    Task: {task}
-    """
+    """Enhanced prompt with examples"""
+    prompt = f"""Convert this task into JSON steps using only these actions: {ALLOWED_ACTIONS}.
+All files must be within {DATA_DIR}. Never delete files. Example responses:
+
+Example 1: {{"action":"count_weekdays", "input_path":"data/dates.txt", "output_path":"data/result.txt", "day":"Wednesday"}}
+Example 2: [{{"action":"format_file", "input_path":"data/file.md"}}, {{"action":"run_script", "script":"prettier@3.4.2"}}]
+
+Task: {task}
+JSON:"""
+    
     try:
         llm_response = call_llm(prompt)
         print("DEBUG: LLM Response ->", llm_response)  # 🔍 Print raw LLM response
@@ -78,28 +81,27 @@ def parse_task(task: str) -> List[Dict]:
 def read_root():
     return {"message": "DataWorks Automation API is running"}
 
-from pathlib import Path
 
 @app.post("/run")
 async def run_task(request: TaskRequest):
-    """API Endpoint to parse and execute automation tasks using Celery."""
     try:
         steps = parse_task(request.task)
-    except HTTPException as e:
-        return {"status": "error", "detail": e.detail}
+        for step in steps:
+            if 'input_path' in step and not Path(step['input_path']).exists():
+                raise HTTPException(400, f"Input file not found: {step['input_path']}")
+            
+            if not validate_step(step):
+                raise HTTPException(400, f"Invalid step: {step}")
+            
+            process_task.delay(step)
+            
+        return {"status": "success"}
     
-    # ✅ Check if input files exist before processing  
-    for step in steps:
-        input_path = step.get("input_path")
-        if input_path and not Path(input_path).exists():
-            return {"status": "error", "detail": f"File not found: {input_path}"}
-
-        if not validate_step(step):
-            return {"status": "error", "detail": "Invalid step"}
-        
-        process_task.delay(step)  # Celery async task execution
-
-    return {"status": "success", "message": "Task execution started in Celery"}
+    except HTTPException as e:
+        raise
+    except Exception as e:
+        logging.error(f"Task failed: {str(e)}")
+        raise HTTPException(500, "Internal server error")
 
 @app.get("/read")
 async def read_file(path: str):
